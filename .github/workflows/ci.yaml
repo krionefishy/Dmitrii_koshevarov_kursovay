@@ -1,0 +1,49 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      PERSONAL_PREFIX: dmitrii_koshevarov
+      JWT_SECRET: ci-only-secret-for-disposable-test-runner-12345
+      DATABASE_URL: postgresql+asyncpg://app:test-only@localhost:55432/dmitrii_koshevarov_helpdesk_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.12"
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.9.8"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test frontend behavior
+        run: npm ci && npm test
+      - name: Check frontend syntax
+        run: node --check backend/app/ui/app.js
+      - uses: extractions/setup-just@v2
+      - name: Install locked dependencies
+        run: uv sync --frozen
+      - name: Check formatting, lint and types
+        run: just lint typecheck
+      - name: Start PostgreSQL 17
+        run: docker compose -f deploy/docker-compose.ci.yml up -d --wait --wait-timeout 90
+      - name: Apply Alembic migrations
+        run: just ci-migrate
+      - name: Check metadata against migrations
+        run: uv run --frozen alembic check
+      - name: Run tests
+        run: just ci-test
+      - name: Build deployment image
+        run: just docker-build ci
+      - name: Stop test database
+        if: always()
+        run: docker compose -f deploy/docker-compose.ci.yml down --remove-orphans

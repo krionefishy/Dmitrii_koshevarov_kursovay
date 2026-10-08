@@ -1,0 +1,49 @@
+name: ${PERSONAL_PREFIX:-dmitrii_koshevarov}_helpdesk
+x-app: &app
+  build:
+    context: ..
+    dockerfile: deploy/Dockerfile
+  environment:
+    PERSONAL_PREFIX: ${PERSONAL_PREFIX:-dmitrii_koshevarov}
+    JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+    DB_HOST: db
+    DB_PORT: 5432
+    DB_USER: ${DB_USER:-app}
+    DB_PASSWORD: ${DB_PASSWORD:-local-dev-only}
+    DB_NAME: ${DB_NAME:-${PERSONAL_PREFIX:-dmitrii_koshevarov}_helpdesk}
+    DB_SCHEMA: ${DB_SCHEMA:-${PERSONAL_PREFIX:-dmitrii_koshevarov}}
+services:
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: ${DB_NAME:-${PERSONAL_PREFIX:-dmitrii_koshevarov}_helpdesk}
+      POSTGRES_USER: ${DB_USER:-app}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-local-dev-only}
+    volumes:
+      - ${PG_DATA_PATH:-pg_data}:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+  migrate:
+    <<: *app
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+  backend:
+    <<: *app
+    ports:
+      - "127.0.0.1:${APP_PORT:-8000}:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/ready')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  pg_data:

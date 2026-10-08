@@ -1,0 +1,6 @@
+services:
+  db:
+    ports:
+      - "127.0.0.1:${BENCH_DB_PORT:-55435}:5432"
+  backend:
+    command: ["uvicorn", "backend.benchmarks.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--no-access-log"]
