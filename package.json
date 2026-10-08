@@ -1,0 +1,13 @@
+{
+  "devDependencies": {
+    "jsdom": "^29.1.1"
+  },
+  "name": "helpdesk-ui-tests",
+  "private": true,
+  "scripts": {
+    "test": "node --test backend/tests/ui.test.cjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
