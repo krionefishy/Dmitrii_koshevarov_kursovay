@@ -56,5 +56,8 @@ benchmark-docker profile="small":
 benchmark-down:
     docker compose --env-file .env -f deploy/compose.yaml -f deploy/compose.benchmark.yaml down
 
+load-step scenario="mixed" rate="1" output_dir="../helpdesk-load-results":
+    uv run --frozen python load/run_step.py {{scenario}} {{rate}} --output-dir "{{output_dir}}"
+
 serve-benchmark:
     uv run --frozen uvicorn backend.benchmarks.main:app --host 127.0.0.1 --port "${APP_PORT:-8000}" --workers 1 --no-access-log

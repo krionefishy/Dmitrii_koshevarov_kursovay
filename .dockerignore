@@ -19,11 +19,6 @@ build/
 *.egg-info/
 .local/
 node_modules/
-.cursor/
-.superdesign/
-.agents/
-.codex/
-AGENTS.md
 docs/
 work/
 artifacts/
