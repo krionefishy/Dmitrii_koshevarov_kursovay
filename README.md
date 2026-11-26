@@ -153,6 +153,7 @@ just benchmark-docker work
 | backend/benchmarks | Сервер с измерительными обработчиками, сбор метрик и HTTP-прогон |
 | backend/tests | Тесты бизнес-правил, API, БД и интерфейса |
 | deploy | Dockerfile и конфигурации Compose |
+| load | Нагрузочный тест k6 и [инструкция запуска](load/README.md) |
 | just | Команды проверки, сервера и миграций |
 | .github/workflows | CI |
 
